@@ -6,9 +6,13 @@ import time
 index_map = {
     "S&P 500": "^GSPC",
     "NASDAQ 100": "^NDX",
-    "VIX": "^VIX",
-    "Gold": "GC=F",       # Futures sull'oro
-    "Brent Oil": "BZ=F"   # Futures sul Brent
+    "Dow Jones": "^DJI",
+    "DAX (Germania)": "^GDAXI",
+    "FTSE 100 (UK)": "^FTSE",
+    "Nikkei 225 (Giappone)": "^N225",
+    "VIX (Volatilità)": "^VIX",
+    "Gold (Oro)": "GC=F",       # Futures sull'oro
+    "Brent Oil (Petrolio)": "BZ=F"   # Futures sul Brent
 }
 
 # UI Streamlit
