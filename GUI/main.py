@@ -2,7 +2,8 @@ import streamlit as st
 import yfinance as yf
 import time
 import requests
-from bs4 import BeautifulSoup
+import json
+from scripts.extractor import get_vix_value  # Assumendo che funzioni correttamente
 
 # Mappatura nomi -> ticker Yahoo Finance
 index_map = {
@@ -17,19 +18,6 @@ index_map = {
     "Brent Oil (Petrolio)": "BZ=F"
 }
 
-# Funzione per ottenere il Fear & Greed Index (CNN)
-def get_fear_and_greed():
-    url = "https://edition.cnn.com/markets/fear-and-greed"
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
-    try:
-        value = soup.find("div", class_="FearGreedIndex__Dial-value").text.strip()
-        label = soup.find("div", class_="FearGreedIndex__Dial-status").text.strip()
-        return int(value), label
-    except:
-        return None, "Errore nel parsing"
-
 # UI Streamlit
 st.title("📈 Dashboard Indici Finanziari - Realtime Yahoo Finance")
 st.markdown("Seleziona gli indici da monitorare:")
@@ -41,13 +29,13 @@ selected_indices = st.multiselect(
     default=["S&P 500", "NASDAQ 100"]
 )
 
-# Checkbox per attivare Fear & Greed Index
-show_fg_index = st.checkbox("Mostra Fear & Greed Index (CNN)")
+# Checkbox per mostrare VIX
+show_fg_index = st.checkbox("Mostra VIX (Indice di volatilità CBOE)")
 
 # Slider per aggiornamento
 refresh_interval = st.slider("Aggiorna ogni (secondi):", 5, 60, 10)
 
-# Placeholder per l'output
+# Placeholder dinamico
 placeholder = st.empty()
 
 # Funzione per ottenere il prezzo attuale
@@ -61,7 +49,7 @@ def get_yahoo_price(ticker):
     except:
         return "Errore"
 
-# Avvia live update
+# Avvio del loop di aggiornamento
 if selected_indices or show_fg_index:
     while True:
         with placeholder.container():
@@ -71,14 +59,23 @@ if selected_indices or show_fg_index:
                 price = get_yahoo_price(ticker)
                 st.write(f"**{name}** ({ticker}): {price}")
 
+            # Mostra VIX solo se selezionato
             if show_fg_index:
-                st.subheader("😨 Fear & Greed Index (CNN)")
-                fg_value, fg_label = get_fear_and_greed()
-                st.write(f"**Valore:** {fg_value}")
-                st.write(f"**Sentiment:** {fg_label}")
+                st.subheader("💥 Volatilità VIX (CBOE)")
+                vix_value = get_vix_value()
+                if vix_value is not None:
+                    st.write(f"**Valore VIX:** {vix_value}")
+                    if vix_value > 30:
+                        st.error("🚨 Alta volatilità!")
+                    elif vix_value > 20:
+                        st.warning("⚠️ Volatilità moderata")
+                    else:
+                        st.success("✅ Volatilità bassa")
+                else:
+                    st.warning("⚠️ VIX non disponibile")
 
             st.markdown(f"_Ultimo aggiornamento: {time.strftime('%H:%M:%S')}_")
 
         time.sleep(refresh_interval)
 else:
-    st.warning("Seleziona almeno un indice o attiva il Fear & Greed Index per iniziare.")
+    st.warning("Seleziona almeno un indice o attiva il VIX per iniziare.")
