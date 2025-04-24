@@ -3,7 +3,7 @@ import yfinance as yf
 import time
 import requests
 import json
-from scripts.extractor import get_vix_value  # Assumendo che funzioni correttamente
+from scripts.extractor import get_vix_value  
 
 # Mappatura nomi -> ticker Yahoo Finance
 index_map = {
