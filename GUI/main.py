@@ -4,6 +4,8 @@ import time
 import pandas as pd
 import plotly.express as px
 from scripts.extractor import get_vix_value  # Importa il tuo get_vix_value personalizzato
+from scripts.extractor import get_historical_data
+from scripts.extractor import get_yahoo_price
 
 # --- Mappatura nomi -> ticker Yahoo Finance ---
 index_map = {
@@ -27,7 +29,7 @@ st.markdown("Seleziona gli indici da monitorare:")
 selected_indices = st.multiselect(
     "Scegli gli indici:",
     list(index_map.keys()),
-    default=["S&P 500", "NASDAQ 100"]
+    default=["Gold (Oro)"]
 )
 
 # Checkbox per mostrare VIX
@@ -35,24 +37,6 @@ show_fg_index = st.checkbox("Mostra VIX (Indice di volatilità CBOE)")
 
 # Slider per aggiornamento
 refresh_interval = st.slider("Aggiorna ogni (secondi):", 5, 60, 10)
-
-# --- Funzioni ---
-def get_yahoo_price(ticker):
-    try:
-        data = yf.Ticker(ticker).history(period="1d", interval="1m")
-        if not data.empty:
-            return round(data['Close'].iloc[-1], 2)
-        else:
-            return "N/D"
-    except:
-        return "Errore"
-
-def get_historical_data(ticker):
-    try:
-        data = yf.Ticker(ticker).history(period="1y", interval="1d")
-        return data
-    except:
-        return pd.DataFrame()
 
 # --- Placeholder dinamico per aggiornamento ---
 placeholder = st.empty()
@@ -71,7 +55,76 @@ if selected_indices:
         else:
             st.warning(f"Dati storici non disponibili per {name}.")
 
-# Loop aggiornamenti valori real-time
+# --- INTEGRAZIONE: Analisi Economica Mondiale ---
+st.title("🌍 Analisi Economica per Nazione")
+
+# Flag per attivare l'analisi economica mondiale
+show_economic_analysis = st.checkbox("Mostra Analisi Economica Mondiale")
+
+if show_economic_analysis:
+    st.markdown("Seleziona i paesi di cui vuoi analizzare Debito/PIL, PIL e Costo della Vita:")
+
+    countries = ["United States", "Germany", "France", "Italy", "Japan", "China", "India", "Brazil", "South Africa"]
+
+    selected_countries = st.multiselect("Scegli i Paesi:", countries, default=["United States", "Germany", "Italy"])
+
+    if selected_countries:
+        # Dati simulati di esempio (puoi collegare vere API in futuro)
+        economic_data = {
+            "United States": {"Debt_GDP": 123.0, "GDP": 25000000, "Cost_of_Living_Index": 70},
+            "Germany": {"Debt_GDP": 65.0, "GDP": 4500000, "Cost_of_Living_Index": 60},
+            "France": {"Debt_GDP": 111.0, "GDP": 3100000, "Cost_of_Living_Index": 65},
+            "Italy": {"Debt_GDP": 134.0, "GDP": 2100000, "Cost_of_Living_Index": 58},
+            "Japan": {"Debt_GDP": 250.0, "GDP": 5000000, "Cost_of_Living_Index": 68},
+            "China": {"Debt_GDP": 77.0, "GDP": 18000000, "Cost_of_Living_Index": 45},
+            "India": {"Debt_GDP": 85.0, "GDP": 3500000, "Cost_of_Living_Index": 32},
+            "Brazil": {"Debt_GDP": 91.0, "GDP": 2100000, "Cost_of_Living_Index": 40},
+            "South Africa": {"Debt_GDP": 70.0, "GDP": 400000, "Cost_of_Living_Index": 38},
+        }
+
+        # Crea il DataFrame
+        df = pd.DataFrame(
+            {country: economic_data[country] for country in selected_countries}
+        ).T
+        df.index.name = "Country"
+
+        # Mostra la tabella
+        st.dataframe(df)
+
+        # Grafico Debito/PIL
+        fig_debt = px.bar(
+            df,
+            x=df.index,
+            y="Debt_GDP",
+            title="Debito Pubblico (% del PIL)",
+            labels={"Debt_GDP": "Debito % PIL"},
+        )
+        st.plotly_chart(fig_debt, use_container_width=True)
+
+        # Grafico Costo della Vita
+        fig_col = px.bar(
+            df,
+            x=df.index,
+            y="Cost_of_Living_Index",
+            title="Indice del Costo della Vita",
+            labels={"Cost_of_Living_Index": "Indice Costo Vita"},
+            color="Cost_of_Living_Index",
+        )
+        st.plotly_chart(fig_col, use_container_width=True)
+
+        # Grafico PIL
+        fig_gdp = px.bar(
+            df,
+            x=df.index,
+            y="GDP",
+            title="Prodotto Interno Lordo (PIL) in Milioni di $",
+            labels={"GDP": "PIL ($M)"},
+        )
+        st.plotly_chart(fig_gdp, use_container_width=True)
+    else:
+        st.warning("Seleziona almeno un paese per visualizzare i dati.")
+
+# --- Continua la tua logica originaria: Loop aggiornamenti valori real-time ---
 if selected_indices or show_fg_index:
     while True:
         with placeholder.container():
