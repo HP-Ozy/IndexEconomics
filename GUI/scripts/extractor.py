@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import streamlit as st
 import yfinance as yf
 import time
-import json
 import pandas as pd
 
 
