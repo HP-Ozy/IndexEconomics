@@ -88,13 +88,16 @@ if show_economic_analysis:
         ).T
         df.index.name = "Country"
 
+        # --- FIX: reset index per avere 'Country' come colonna ---
+        df = df.reset_index()
+
         # Mostra la tabella
         st.dataframe(df)
 
         # Grafico Debito/PIL
         fig_debt = px.bar(
             df,
-            x=df.index,
+            x="Country",
             y="Debt_GDP",
             title="Debito Pubblico (% del PIL)",
             labels={"Debt_GDP": "Debito % PIL"},
@@ -104,7 +107,7 @@ if show_economic_analysis:
         # Grafico Costo della Vita
         fig_col = px.bar(
             df,
-            x=df.index,
+            x="Country",
             y="Cost_of_Living_Index",
             title="Indice del Costo della Vita",
             labels={"Cost_of_Living_Index": "Indice Costo Vita"},
@@ -115,12 +118,52 @@ if show_economic_analysis:
         # Grafico PIL
         fig_gdp = px.bar(
             df,
-            x=df.index,
+            x="Country",
             y="GDP",
             title="Prodotto Interno Lordo (PIL) in Milioni di $",
             labels={"GDP": "PIL ($M)"},
         )
         st.plotly_chart(fig_gdp, use_container_width=True)
+
+        # --- NUOVA PARTE: Mappa geografica ---
+        st.subheader("🌎 Visualizzazione sulla Mappa del Mondo")
+
+        # Codici ISO Alpha-3
+        iso_codes = {
+            "United States": "USA",
+            "Germany": "DEU",
+            "France": "FRA",
+            "Italy": "ITA",
+            "Japan": "JPN",
+            "China": "CHN",
+            "India": "IND",
+            "Brazil": "BRA",
+            "South Africa": "ZAF"
+        }
+
+        # Aggiungi la colonna ISO
+        df['ISO_Code'] = df['Country'].map(iso_codes)
+
+        # Scelta del parametro da visualizzare
+        parameter_to_map = st.selectbox(
+            "Scegli il parametro da visualizzare sulla mappa:",
+            options=["GDP", "Debt_GDP", "Cost_of_Living_Index"],
+            index=0
+        )
+
+        # Mappa Plotly
+        fig_map = px.choropleth(
+            df,
+            locations="ISO_Code",
+            color=parameter_to_map,
+            hover_name="Country",
+            color_continuous_scale="Viridis",
+            projection="natural earth",
+            title=f"Mappa Mondiale basata su {parameter_to_map.replace('_', ' ')}"
+        )
+
+        st.plotly_chart(fig_map, use_container_width=True)
+
     else:
         st.warning("Seleziona almeno un paese per visualizzare i dati.")
 
@@ -153,3 +196,5 @@ if selected_indices or show_fg_index:
         time.sleep(refresh_interval)
 else:
     st.warning("Seleziona almeno un indice o attiva il VIX per iniziare.")
+
+
