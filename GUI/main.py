@@ -7,7 +7,7 @@ from scripts.extractor import get_vix_value  # Importa il tuo get_vix_value pers
 from scripts.extractor import get_historical_data
 from scripts.extractor import get_yahoo_price
 
-# --- Mappatura nomi -> ticker Yahoo Finance ---
+
 index_map = {
     "S&P 500": "^GSPC",
     "NASDAQ 100": "^NDX",
@@ -167,7 +167,7 @@ if show_economic_analysis:
     else:
         st.warning("Seleziona almeno un paese per visualizzare i dati.")
 
-# --- Continua la tua logica originaria: Loop aggiornamenti valori real-time ---
+
 if selected_indices or show_fg_index:
     while True:
         with placeholder.container():
