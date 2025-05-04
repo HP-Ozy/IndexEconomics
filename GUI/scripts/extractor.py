@@ -55,3 +55,46 @@ def get_historical_data(ticker):
         return data
     except:
         return pd.DataFrame()
+    
+import re
+
+def get_cost_of_living_index(country_name, api_key=None):
+    """
+    Tenta di ottenere il costo della vita da Numbeo.
+    Se non disponibile o fallisce, usa WorldData.info.
+    """
+    if api_key:
+        url = f"https://www.numbeo.com/api/country_prices?api_key={api_key}&country={country_name}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            index = data.get('cost_of_living_index')
+            if index:
+                return index
+
+    # --- FALLBACK: WorldData.info ---
+    try:
+        country_url_name = country_name.lower().replace(" ", "-")
+        url = f"https://www.worlddata.info/{country_url_name}.php"
+        response = requests.get(url)
+        if response.status_code == 200:
+            html = response.text
+            if "Cost of Living Index" in html:
+                idx = html.find("Cost of Living Index")
+                snippet = html[idx:idx+300]
+                match = re.search(r"(\d{1,3}\.?\d*)", snippet)
+                if match:
+                    return float(match.group(1))
+    except:
+        pass
+
+    return None
+
+def get_world_bank_data(country_code, indicator):
+    url = f"https://api.worldbank.org/v2/country/{country_code}/indicator/{indicator}?format=json&per_page=1&date=2023"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if data and len(data) > 1 and data[1]:
+            return data[1][0]['value']
+    return None
